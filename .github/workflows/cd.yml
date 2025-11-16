@@ -7,6 +7,7 @@ on:
 
 permissions:
   contents: write
+  packages: write
 
 jobs:
   build-and-package:
@@ -31,7 +32,6 @@ jobs:
           path: streamlit-shipping.tar
 
   deploy-to-hf:
-    if: ${{ secrets.HF_TOKEN != '' }}
     needs: build-and-package
     runs-on: ubuntu-latest
     steps:
@@ -39,8 +39,9 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Push to Hugging Face Space
+        if: ${{ env.HF_TOKEN != '' }}
         env:
-          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          HF_TOKEN: ${{ secrets.HF_TOKEN || '' }}
         run: |
           git config --global user.email "actions@github.com"
           git config --global user.name "GitHub Actions"
