@@ -8,8 +8,9 @@ on:
     branches:
       - main
 
+# butuh write supaya bisa git push
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   test:
@@ -57,3 +58,24 @@ jobs:
         with:
           name: streamlit-shipping-image
           path: streamlit-shipping.tar
+
+  deploy-to-hf:
+    needs: test   # kalau mau nunggu build-and-package juga: [test, build-and-package]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Push to HuggingFace Space
+        run: |
+          git config --global user.email "actions@github.com"
+          git config --global user.name "GitHub Actions"
+
+          # tambahkan remote HF (username & space name sesuaikan)
+          git remote add hf https://vorddd:${{ secrets.HF_TOKEN }}@huggingface.co/spaces/vorddd/MLOps-MidExam
+
+          # kalau branch di HF belum ada, pull ini bakal fail -> kita ignore dengan || true
+          git pull hf main || true
+
+          # push branch main ke HF -> trigger build Docker di Space
+          git push hf main --force
