@@ -1,10 +1,7 @@
-name: CI/CD
+name: CD
 
 on:
   push:
-    branches:
-      - main
-  pull_request:
     branches:
       - main
 
@@ -12,32 +9,7 @@ permissions:
   contents: write
 
 jobs:
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-          cache: pip
-          cache-dependency-path: |
-            deployment/requirements.txt
-            requirements-dev.txt
-
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r deployment/requirements.txt
-          pip install -r requirements-dev.txt
-
-      - name: Run tests
-        run: pytest
-
   build-and-package:
-    needs: test
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -59,10 +31,8 @@ jobs:
           path: streamlit-shipping.tar
 
   deploy-to-hf:
-    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && secrets.HF_TOKEN != '' }}
-    needs:
-      - test
-      - build-and-package
+    if: ${{ secrets.HF_TOKEN != '' }}
+    needs: build-and-package
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
