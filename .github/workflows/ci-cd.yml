@@ -59,7 +59,7 @@ jobs:
           path: streamlit-shipping.tar
 
   deploy-to-hf:
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && secrets.HF_TOKEN != ''
+    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && secrets.HF_TOKEN != '' }}
     needs:
       - test
       - build-and-package
