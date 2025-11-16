@@ -1,212 +1,133 @@
-# 📦 MLOPS-MIDEXAM — Shipping Delay Prediction  
-**Machine Learning • Deployment • CI/CD • Testing • Docker**
+# MLOps MidExam – Shipping Delay Prediction
 
-Repository ini berisi project Machine Learning untuk memprediksi apakah sebuah pengiriman **tiba tepat waktu** atau **terlambat** berdasarkan data operasional logistik.  
-Proyek ini mencakup:
+End-to-end machine learning project to predict whether a shipment will arrive on time or late based on operational logistics data. The repository covers model training, deployment-ready artifacts, automated testing, CI/CD, containerization, and a public app on Hugging Face Spaces.
 
-- Training model ML (scikit-learn)  
-- Deployment aplikasi (FastAPI/Streamlit — sesuaikan)  
-- CI/CD menggunakan GitHub Actions  
-- Unit testing + data integrity testing  
-- Containerization (Dockerfile)  
-- Deployment ke HuggingFace Spaces  
+Live app: **https://huggingface.co/spaces/vorddd/MLOps-MidExam**
 
 ---
 
-## 📁 Project Structure
+## Project Structure
 
 ```
-MLOPS-MIDEXAM/
-│
-├── .github/
-│   └── workflows/
-│       └── ci-cd.yml              # GitHub Actions (CI/CD Pipeline)
-│
-├── deployment/
-│   ├── app.py                     # Main application (API/UI)
-│   ├── eda.py                     # EDA script (optional)
-│   ├── prediction.py              # Prediction logic (load model + inference)
-│   ├── best_model_pipeline.joblib # Trained model pipeline
-│   ├── preprocessing_pipeline.joblib
-│   ├── requirements.txt           # Dependencies for deployment
-│   └── shipping.csv               # Deployment resource (optional)
-│
-├── tests/
-│   ├── __pycache__/
-│   └── test_data_integrity.py     # Test for inference pipeline & dataset validation
-│
-├── Dockerfile                      # Container image for deployment
-├── best_model_pipeline.joblib      # Model output from training (root copy)
-├── preprocessing_pipeline.joblib    # Preprocessing pipeline (root copy)
-├── shipping.csv                    # Main dataset used for training/testing
-├── requirements-dev.txt           # Dev dependencies (pytest, linters, etc.)
-├── iqbal_saputra.ipynb            # Main training notebook
-├── iqbal_saputra_inf.ipynb        # Inference notebook (optional)
-├── url.txt                        # Deployment URL (HuggingFace)
-└── README.md                      # Project documentation
+MLOps-midExam/
+├─ .github/workflows/ci-cd.yml      # GitHub Actions pipeline
+├─ deployment/
+│  ├─ app.py                        # Streamlit entry point
+│  ├─ eda.py                        # Interactive visual analytics
+│  ├─ prediction.py                 # Inference UI + model loader
+│  ├─ best_model_pipeline.joblib    # Production pipeline
+│  ├─ preprocessing_pipeline.joblib # (optional) preprocessing artifact
+│  ├─ requirements.txt              # Runtime dependencies
+│  └─ shipping.csv                  # Data copy for deployment
+├─ tests/test_data_integrity.py     # Dataset & artifact smoke tests
+├─ Dockerfile                       # Container definition for the app
+├─ best_model_pipeline.joblib       # Training output (root copy)
+├─ preprocessing_pipeline.joblib    # Training preprocessing (root copy)
+├─ shipping.csv                     # Main dataset
+├─ requirements-dev.txt             # Dev/test dependencies
+├─ iqbal_saputra.ipynb              # Exploration + training notebook
+├─ iqbal_saputa_inf.ipynb           # Inference walkthrough notebook
+└─ url.txt                          # Deployment + dataset references
 ```
 
 ---
 
-## 🚀 Overview
+## Overview
 
-### 🎯 Objective  
-Membangun sistem prediksi apakah paket *Reached on Time* (1) atau *Delayed* (0) berdasarkan data logistik.
+### Objective
+Predict the target `Reached.on.Time_Y.N` (1 = on time, 0 = delayed) using historical shipment information to support operational decisions.
 
-### 🔍 Dataset  
-- File: `shipping.csv`  
-- Target: `Reached.on.Time_Y.N`  
-
-Feature examples:
-- Warehouse Block  
-- Mode of Transport  
-- Distance & Duration  
-- Customer Rating  
-- Cost of Delivery  
-- Product Importance  
-- dll.
+### Dataset
+- Source: Kaggle – Shipping data (`shipping.csv`)
+- Key features: `Warehouse_block`, `Mode_of_Shipment`, `Customer_care_calls`, `Customer_rating`, `Cost_of_the_Product`, `Prior_purchases`, `Product_importance`, `Discount_offered`, `Weight_in_gms`.
 
 ---
 
-## 🧠 Model
+## Model & Metrics
 
-- Preprocessing menggunakan `ColumnTransformer`
-- Scaling numerik + encoding kategorikal
-- Model terbaik hasil tuning: **KNN**
-- Pipeline disimpan sebagai:
-  - `best_model_pipeline.joblib`
-  - `preprocessing_pipeline.joblib`
+- Preprocessing: `ColumnTransformer` with scaling for numeric columns and encoding for categorical columns.
+- Best estimator: **K-Nearest Neighbors** (selected after experimentation and hyperparameter tuning).
+- Serialized artifacts: `best_model_pipeline.joblib` (inference-ready) plus `preprocessing_pipeline.joblib` for reference.
 
-Metrics (sesuaikan dengan hasil akhir):
+| Metric     | Score |
+| ---------- | ----- |
+| Accuracy   | 0.927 |
+| Precision  | 0.940 |
+| Recall     | 0.937 |
+| F1-score   | 0.938 |
 
-- Accuracy: ...
-- Precision: ...
-- Recall: ...
-- F1-score: ...
+Scores are computed on the full dataset to give a reference point for downstream monitoring.
 
 ---
 
-## 🧪 Unit Testing
+## Testing
 
-Folder: `tests/test_data_integrity.py`
+`tests/test_data_integrity.py` ensures:
 
-Test mencakup:
+- `shipping.csv` exists with the expected schema.
+- The serialized pipeline loads successfully and exposes `.predict`.
 
-- Cek dataset tersedia & kolom wajib ada  
-- Cek model bisa diload (`joblib`)  
-- Inference `predict()` berjalan tanpa error  
-- Jumlah output sesuai input  
-
-Jalankan test:
+Run locally:
 
 ```bash
+python -m venv .venv
+.venv\Scripts\activate        # use `source .venv/bin/activate` on macOS/Linux
+pip install -r deployment/requirements.txt -r requirements-dev.txt
 pytest
 ```
 
 ---
 
-## ⚙️ CI/CD Pipeline
+## CI/CD Pipeline
 
-### CI — Continuous Integration (GitHub Actions)
+- **CI (GitHub Actions)** – `.github/workflows/ci-cd.yml`
+  1. Set up Python 3.11 with pip caching.
+  2. Install deployment + dev dependencies.
+  3. Run the pytest suite.
 
-Workflow: `.github/workflows/ci-cd.yml`
-
-Pipeline otomatis:
-
-1. Install dependencies  
-2. Install dev dependencies (`requirements-dev.txt`)  
-3. Run unit tests (`pytest`)  
-4. (Opsional) Linting / formatting  
-
-Pipeline berjalan otomatis setiap push atau PR.
+- **CD (Hugging Face Spaces)**  
+  The repository is connected to the Space `vorddd/MLOps-MidExam`. Any push to `main` triggers a rebuild and redeploy so the public UI always reflects the latest code.
 
 ---
 
-### CD — Continuous Deployment (HuggingFace Spaces)
+## Deployment
 
-- Repo ini terkoneksi ke **HuggingFace Space**
-- Jika CI *lulus*:
-  - Commit terbaru otomatis ditarik  
-  - Dibuild ulang  
-  - Dideploy ulang  
-
-Tidak perlu upload manual.
+- Public URL: **https://huggingface.co/spaces/vorddd/MLOps-MidExam**
+- Stack: Streamlit single-page app with two sections:
+  - **Exploratory Data Analysis** – interactive Plotly visuals using tabs.
+  - **Model Prediction** – form-based inference with probabilities.
 
 ---
 
-## 🌐 Deployment
-
-URL aplikasi tercantum pada:
-
-```
-url.txt
-```
-
-Contoh:
-
-👉 Live App: **https://huggingface.co/spaces/USERNAME/NAMA-SPACE**
-
----
-
-## 🖥️ Menjalankan Aplikasi Secara Lokal
-
-Masuk folder:
+## Running Locally
 
 ```bash
 cd deployment
 pip install -r requirements.txt
-```
-
-Jika menggunakan **Streamlit**:
-
-```bash
 streamlit run app.py
 ```
 
-Jika menggunakan **FastAPI**:
-
-```bash
-uvicorn app:app --reload
-```
+The Streamlit config in `app.py` matches the Hugging Face runtime, so the local experience mirrors production.
 
 ---
 
-## 🐳 Docker Support
+## Docker
 
-Build image:
+Build and run the containerized app:
 
 ```bash
 docker build -t shipping-app .
-```
-
-Run container:
-
-```bash
-docker run -p 8080:8080 shipping-app
+docker run --rm -p 8501:8501 shipping-app
 ```
 
 ---
 
-## 🔁 Re-Training Model
+## Retraining
 
-Training dilakukan melalui notebook:
-
-```
-iqbal_saputra.ipynb
-```
-
-Isi notebook:
-
-- EDA  
-- Preprocessing  
-- Training model  
-- Evaluasi  
-- Export model pipeline `.joblib`  
+Re-run `iqbal_saputra.ipynb` to explore data, retrain models, and export updated `.joblib` artifacts. Copy the refreshed files into `deployment/` before pushing to keep the Space in sync.
 
 ---
 
-## 📄 License
+## License
 
-Project ini dibuat untuk keperluan akademik MLOps Mid Exam.
-
----
+Academic use only for the **MLOps MidExam** submission. Contact the author before reusing the assets commercially.

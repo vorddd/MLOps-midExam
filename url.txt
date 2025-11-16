@@ -1,3 +1,3 @@
-url deployment : https://huggingface.co/spaces/iqbal-saputra/Milestone2
+url deployment : https://huggingface.co/spaces/vorddd/MLOps-MidExam
 
 url dataset : https://www.kaggle.com/datasets/nayanack/shipping/data

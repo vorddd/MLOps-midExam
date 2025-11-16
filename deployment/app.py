@@ -22,7 +22,7 @@ def load_data() -> pd.DataFrame:
 
 def render_overview(data: pd.DataFrame) -> None:
     st.title("Shipping Service Monitor")
-    st.caption("Milestone 2 • Iqbal Saputra • RMT-032")
+    st.caption("MLOps MidExam • Iqbal Saputra • RMT-032")
     st.write(
         "Aplikasi ini dirancang agar nyaman dipakai di **Hugging Face Spaces**, "
         "dengan layout yang ringkas dan fokus pada insight logistik."
