@@ -93,6 +93,24 @@ pytest
   2. Prepare a lightweight copy of the repo using `rsync` (skipping notebooks, tests, dev tooling, etc.) while keeping the `models/` folder intact.
   3. Force-push the deployment bundle to the Hugging Face Space `vorddd/MLOps-MidExam`.
 
+### Managing Binary Artifacts with git-xet
+
+Large `.joblib` files inside `models/` are tracked via [git-xet](https://github.com/xetdata/git-xet) to avoid pushing huge blobs directly to Hugging Face or GitHub. To work with the repository locally:
+
+1. Install git-xet (one-time):
+   ```bash
+   curl -L https://github.com/xetdata/git-xet/releases/latest/download/git-xet-$(uname -s | tr '[:upper:]' '[:lower:]')-amd64 -o git-xet
+   chmod +x git-xet && sudo mv git-xet /usr/local/bin/git-xet
+   ```
+2. Inside the repo, run:
+   ```bash
+   git xet install
+   ```
+   This configures the Git filters so pulling/pushing automatically uploads the binaries to XetHub.
+3. Commit normally; git-xet deduplicates the `.joblib` artifacts behind the scenes.
+
+The CI/CD workflows perform these steps automatically, ensuring both GitHub Actions and Hugging Face deploys always see the model files.
+
 ---
 
 ## Deployment

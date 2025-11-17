@@ -15,8 +15,17 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
+      - name: Install git-xet
+        run: |
+          curl -L https://github.com/xetdata/git-xet/releases/latest/download/git-xet-linux-amd64 -o git-xet
+          sudo install -m 0755 git-xet /usr/local/bin/git-xet
+          rm git-xet
+
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Configure git-xet
+        run: git xet install
 
       - name: Set up Python
         uses: actions/setup-python@v5
