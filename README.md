@@ -1,3 +1,13 @@
+---
+title: MLOps Mid Exam - Shipping Delay Prediction
+emoji: \U0001F4E6
+colorFrom: blue
+colorTo: purple
+sdk: docker
+app_port: 7860
+pinned: false
+---
+
 # MLOps MidExam – Shipping Delay Prediction
 
 End-to-end machine learning project to predict whether a shipment will arrive on time or late based on operational logistics data. The repository covers model training, deployment-ready artifacts, automated testing, CI/CD, containerization, and a public app on Hugging Face Spaces.
