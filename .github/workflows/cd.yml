@@ -45,13 +45,17 @@ jobs:
           rsync -av \
             --exclude=".git/" \
             --exclude=".github/" \
-            --exclude="models/" \
             --exclude="tests/" \
             --exclude="*.ipynb" \
-            --exclude="*.joblib" \
+            --exclude="*.json" \
+            --exclude="*.txt" \
+            --exclude="shipping.csv" \
+            --exclude="models/" \
+            --exclude="*.md~" \
             --exclude="Dockerfile" \
             --exclude="requirements-dev.txt" \
             ./ hf_space/
+          cp deployment/requirements.txt hf_space/requirements.txt
 
       - name: Push to Hugging Face Space
         env:

@@ -1,10 +1,11 @@
 ---
 title: MLOps Mid Exam - Shipping Delay Prediction
-emoji: 🧬
+emoji: 📦
 colorFrom: blue
 colorTo: purple
 sdk: docker
-app_port: 7860
+sdk_version: "latest"
+app_file: deployment/app.py
 pinned: false
 ---
 
