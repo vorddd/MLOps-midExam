@@ -23,7 +23,7 @@ def load_data() -> pd.DataFrame:
 
 def render_overview(data: pd.DataFrame) -> None:
     st.title("Shipping Service Monitor")
-    st.caption("MLOps Mid Exam - Shipping delay prediction")
+    st.caption("Shipping delay prediction")
 
     col1, col2, col3 = st.columns(3)
     col1.metric("Total Shipments", f"{len(data):,}")
