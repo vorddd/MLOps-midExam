@@ -16,20 +16,8 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Build Streamlit image
-        run: docker build --tag streamlit-shipping:latest .
-
-      - name: Export Docker image
-        run: docker save streamlit-shipping:latest -o streamlit-shipping.tar
-
-      - name: Upload deployable artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: streamlit-shipping-image
-          path: streamlit-shipping.tar
+      - name: Prepare build placeholder
+        run: echo "Streamlit Space deploy does not require a Docker image."
 
   deploy-to-hf:
     needs: build-and-package
@@ -41,20 +29,14 @@ jobs:
       - name: Prepare Hugging Face Space content
         run: |
           rm -rf hf_space
-          mkdir -p hf_space
+          mkdir -p hf_space/deployment
+
           rsync -av \
-            --exclude=".git/" \
-            --exclude=".github/" \
-            --exclude="tests/" \
             --exclude="*.ipynb" \
-            --exclude="*.json" \
-            --exclude="*.txt" \
-            --exclude="shipping.csv" \
-            --exclude="models/" \
-            --exclude="*.md~" \
-            --exclude="Dockerfile" \
-            --exclude="requirements-dev.txt" \
-            ./ hf_space/
+            --exclude="*.joblib" \
+            deployment/ hf_space/deployment/
+
+          cp README.md hf_space/README.md
           cp deployment/requirements.txt hf_space/requirements.txt
 
       - name: Push to Hugging Face Space

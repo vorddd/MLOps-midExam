@@ -4,14 +4,25 @@ from typing import Optional
 import joblib
 import pandas as pd
 import streamlit as st
+from huggingface_hub import hf_hub_download
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
-MODEL_PATH = PROJECT_ROOT / "models" / "best_model_pipeline.joblib"
+LOCAL_MODEL_PATH = PROJECT_ROOT / "models" / "best_model_pipeline.joblib"
+DATA_PATH = Path(__file__).resolve().parent / "shipping.csv"
+HF_REPO_ID = "vorddd/shipping-delay-knn"
+HF_MODEL_FILENAME = "best_model_pipeline.joblib"
 
 
 @st.cache_resource(show_spinner=False)
 def load_model():
-    return joblib.load(MODEL_PATH)
+    if LOCAL_MODEL_PATH.exists():
+        return joblib.load(LOCAL_MODEL_PATH)
+
+    model_path = hf_hub_download(
+        repo_id=HF_REPO_ID,
+        filename=HF_MODEL_FILENAME,
+    )
+    return joblib.load(model_path)
 
 
 def _get_feature_ranges(data: pd.DataFrame) -> dict:
@@ -40,7 +51,7 @@ def model_page(reference_data: Optional[pd.DataFrame] = None) -> None:
     )
 
     if reference_data is None:
-        reference_data = pd.read_csv(Path(__file__).resolve().parent / "shipping.csv")
+        reference_data = pd.read_csv(DATA_PATH)
 
     feature_ranges = _get_feature_ranges(reference_data)
     product_options = sorted(reference_data["Product_importance"].unique())

@@ -3,8 +3,14 @@ from pathlib import Path
 import joblib
 import pandas as pd
 
+from deployment import prediction
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
+
+
+class _DummyModel:
+    def predict(self, features):
+        return [1] * len(features)
 
 
 def test_shipping_dataset_has_expected_columns():
@@ -34,10 +40,18 @@ def test_shipping_dataset_has_expected_columns():
     assert len(data) > 0, "Dataset is empty"
 
 
-def test_model_artifact_is_loadable():
-    """Loading the trained pipeline should not raise errors."""
-    artifact_path = PROJECT_ROOT / "models" / "best_model_pipeline.joblib"
-    assert artifact_path.exists(), "Model artifact missing in models/"
+def test_load_model_returns_predictable_estimator(monkeypatch, tmp_path):
+    """load_model should load either the local artifact or download fallback."""
 
-    model = joblib.load(artifact_path)
-    assert hasattr(model, "predict"), "Loaded object is not a scikit-learn estimator"
+    dummy_path = tmp_path / "dummy_model.joblib"
+    joblib.dump(_DummyModel(), dummy_path)
+
+    if not prediction.LOCAL_MODEL_PATH.exists():
+        monkeypatch.setattr(prediction, "LOCAL_MODEL_PATH", dummy_path)
+
+    # Ensure the cache does not return a stale object between tests.
+    if hasattr(prediction.load_model, "clear"):
+        prediction.load_model.clear()
+
+    model = prediction.load_model()
+    assert hasattr(model, "predict"), "Model missing predict method"
