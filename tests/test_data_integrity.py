@@ -12,7 +12,9 @@ class _DummyModel:
     def predict(self, features):
         return [1] * len(features)
 
-
+def test_load_model_exists():
+    assert hasattr(prediction, "load_model")
+    
 def test_shipping_dataset_has_expected_columns():
     """Ensure the raw dataset is present and includes the expected signals."""
     dataset_path = PROJECT_ROOT / "shipping.csv"
