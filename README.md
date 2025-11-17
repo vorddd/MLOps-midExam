@@ -1,6 +1,6 @@
 ---
 title: MLOps Mid Exam - Shipping Delay Prediction
-emoji: \U0001F4E6
+emoji: 🧬
 colorFrom: blue
 colorTo: purple
 sdk: docker
