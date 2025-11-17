@@ -1,4 +1,13 @@
-﻿# 📦 MLOPS-MIDEXAM — Shipping Delay Prediction  
+﻿---
+title: MLOps Mid Exam - Shipping Delay Prediction
+emoji: \U0001F4E6
+colorFrom: blue
+colorTo: purple
+sdk: docker
+app_port: 7860
+pinned: false
+---
+# 📦 MLOPS-MIDEXAM — Shipping Delay Prediction  
 **Machine Learning • Deployment • CI/CD • Testing • Docker**
 
 Repository ini berisi project Machine Learning untuk memprediksi apakah sebuah pengiriman **tiba tepat waktu** atau **terlambat** berdasarkan data operasional logistik.  
@@ -34,7 +43,7 @@ MLOPS-MIDEXAM/
 │
 ├── models/
 │   ├── best_model_pipeline.joblib
-│   └── tpreprocessing_pipeline.joblib     # Test for inference pipeline & dataset validation
+│   └── preprocessing_pipeline.joblib     # Test for inference pipeline & dataset validation
 │
 ├── tests/
 │   ├── __pycache__/
