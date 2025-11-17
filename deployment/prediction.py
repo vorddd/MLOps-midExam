@@ -6,7 +6,11 @@ import pandas as pd
 import streamlit as st
 from huggingface_hub import hf_hub_download
 
-# repo model di HF (bukan Spaces)
+# ==== Konfigurasi model ====
+# Path lokal (dipakai CI test & kalau kamu commit artefaknya)
+LOCAL_MODEL_PATH = Path(__file__).resolve().parent / "best_model_pipeline.joblib"
+
+# Repo model di Hugging Face Hub (fallback saat lokal tidak ada)
 MODEL_REPO_ID = "vorddd/shipping-delay-knn-v1"
 MODEL_FILENAME = "best_model_pipeline.joblib"
 
@@ -22,14 +26,25 @@ FEATURE_ORDER = [
 
 @st.cache_resource(show_spinner=False)
 def load_model():
-    """Download + load model pipeline (sudah termasuk preprocessing)."""
-    model_path = hf_hub_download(
-        repo_id=MODEL_REPO_ID,
-        filename=MODEL_FILENAME,
-        repo_type="model",  # karena ini model repo biasa, bukan Spaces
-    )
+    """
+    Load model pipeline.
+
+    Prioritas:
+    1. Kalau LOCAL_MODEL_PATH ada -> pakai itu (dipakai di unit test & dev lokal).
+    2. Kalau tidak ada -> download dari Hugging Face Hub (dipakai di Space).
+    """
+    if LOCAL_MODEL_PATH.exists():
+        model_path = LOCAL_MODEL_PATH
+    else:
+        model_path = hf_hub_download(
+            repo_id=MODEL_REPO_ID,
+            filename=MODEL_FILENAME,
+            repo_type="model",
+        )
+
     model = joblib.load(model_path)
     return model
+
 
 
 def _get_feature_ranges(data: pd.DataFrame) -> dict:
