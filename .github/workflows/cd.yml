@@ -48,4 +48,5 @@ jobs:
 
           git remote add hf https://vorddd:${HF_TOKEN}@huggingface.co/spaces/vorddd/MLOps-MidExam
           git pull hf main || true
-          git push hf main
+          git push hf main --force
+
