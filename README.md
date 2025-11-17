@@ -99,8 +99,7 @@ Large `.joblib` files inside `models/` are tracked via [git-xet](https://github.
 
 1. Install git-xet (one-time):
    ```bash
-   curl -L https://github.com/xetdata/git-xet/releases/latest/download/git-xet-$(uname -s | tr '[:upper:]' '[:lower:]')-amd64 -o git-xet
-   chmod +x git-xet && sudo mv git-xet /usr/local/bin/git-xet
+   curl -fsSL https://xet.sh/install | sudo bash
    ```
 2. Inside the repo, run:
    ```bash
