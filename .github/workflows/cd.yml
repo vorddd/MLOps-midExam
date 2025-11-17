@@ -13,17 +13,8 @@ jobs:
   build-and-package:
     runs-on: ubuntu-latest
     steps:
-      - name: Install git-xet
-        run: |
-          curl -L https://github.com/xetdata/xet-tools/releases/latest/download/git-xet -o git-xet
-          sudo install -m 0755 git-xet /usr/local/bin/git-xet
-          rm git-xet
-
       - name: Checkout repository
         uses: actions/checkout@v4
-
-      - name: Configure git-xet
-        run: git xet install
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -44,17 +35,8 @@ jobs:
     needs: build-and-package
     runs-on: ubuntu-latest
     steps:
-      - name: Install git-xet
-        run: |
-          curl -L https://github.com/xetdata/xet-tools/releases/latest/download/git-xet -o git-xet
-          sudo install -m 0755 git-xet /usr/local/bin/git-xet
-          rm git-xet
-
       - name: Checkout repository
         uses: actions/checkout@v4
-
-      - name: Configure git-xet
-        run: git xet install
 
       - name: Prepare Hugging Face Space content
         run: |
@@ -63,8 +45,10 @@ jobs:
           rsync -av \
             --exclude=".git/" \
             --exclude=".github/" \
+            --exclude="models/" \
             --exclude="tests/" \
             --exclude="*.ipynb" \
+            --exclude="*.joblib" \
             --exclude="Dockerfile" \
             --exclude="requirements-dev.txt" \
             ./ hf_space/
@@ -77,6 +61,7 @@ jobs:
             echo "HF_TOKEN is not set. Skipping deploy step."
             exit 0
           fi
+
           cd hf_space
           git init
           git config user.email "actions@github.com"
