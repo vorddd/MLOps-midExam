@@ -34,19 +34,22 @@ jobs:
   deploy-to-hf:
     needs: build-and-package
     runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
     steps:
-      - name: Checkout repository
+      - name: Checkout repository (full history)
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Push to Hugging Face Space
-        if: ${{ env.HF_TOKEN != '' }}
         env:
-          HF_TOKEN: ${{ secrets.HF_TOKEN || '' }}
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
           git config --global user.email "actions@github.com"
           git config --global user.name "GitHub Actions"
 
+          # tambahkan remote Hugging Face
           git remote add hf https://vorddd:${HF_TOKEN}@huggingface.co/spaces/vorddd/MLOps-MidExam
-          git pull hf main || true
-          git push hf main --force
 
+          # langsung force-push HEAD ke main di HF (tanpa git pull)
+          git push hf HEAD:main --force
