@@ -90,7 +90,7 @@ pytest
 
 - **CD (Hugging Face Spaces)** – `.github/workflows/cd.yml`
   1. Build and package the Streamlit Docker image.
-  2. Prepare a lightweight copy of the repo using `rsync` (excluding `models/`, notebooks, tests, etc.).
+  2. Prepare a lightweight copy of the repo using `rsync` (skipping notebooks, tests, dev tooling, etc.) while keeping the `models/` folder intact.
   3. Force-push the deployment bundle to the Hugging Face Space `vorddd/MLOps-MidExam`.
 
 ---
@@ -101,6 +101,7 @@ pytest
 - Stack: Streamlit single-page app with two sections:
   - **Exploratory Data Analysis** – interactive Plotly visuals using tabs.
   - **Model Prediction** – form-based inference with probabilities.
+- The Streamlit app loads `models/best_model_pipeline.joblib` directly, so the CD job copies that directory during deployment (no artifacts sit inside `deployment/`).
 
 ---
 
@@ -112,7 +113,7 @@ pip install -r requirements.txt
 streamlit run app.py
 ```
 
-The Streamlit config in `app.py` matches the Hugging Face runtime, so the local experience mirrors production.
+The Streamlit config in `app.py` matches the Hugging Face runtime, so the local experience mirrors production. Ensure `../models/best_model_pipeline.joblib` is present before launching.
 
 ---
 
@@ -129,7 +130,7 @@ docker run --rm -p 8501:8501 shipping-app
 
 ## Retraining
 
-Re-run `iqbal_saputra.ipynb` to explore data, retrain models, and export updated `.joblib` artifacts. Copy the refreshed files into both `models/` (for archival) and `deployment/` (for the app) before pushing to keep the Space in sync.
+Re-run `iqbal_saputra.ipynb` to explore data, retrain models, and export updated `.joblib` artifacts. Place the refreshed files inside `models/`; the deployment workflow will include that directory when publishing to Hugging Face.
 
 ---
 

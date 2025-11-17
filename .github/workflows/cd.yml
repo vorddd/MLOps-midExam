@@ -45,12 +45,10 @@ jobs:
           rsync -av \
             --exclude=".git/" \
             --exclude=".github/" \
-            --exclude="models/" \
             --exclude="tests/" \
             --exclude="*.ipynb" \
             --exclude="Dockerfile" \
             --exclude="requirements-dev.txt" \
-            --exclude="shipping.csv" \
             ./ hf_space/
 
       - name: Push to Hugging Face Space

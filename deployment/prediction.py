@@ -5,7 +5,8 @@ import joblib
 import pandas as pd
 import streamlit as st
 
-MODEL_PATH = Path(__file__).resolve().parent / "best_model_pipeline.joblib"
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+MODEL_PATH = PROJECT_ROOT / "models" / "best_model_pipeline.joblib"
 
 
 @st.cache_resource(show_spinner=False)

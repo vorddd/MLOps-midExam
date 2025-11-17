@@ -36,8 +36,8 @@ def test_shipping_dataset_has_expected_columns():
 
 def test_model_artifact_is_loadable():
     """Loading the trained pipeline should not raise errors."""
-    artifact_path = PROJECT_ROOT / "deployment" / "best_model_pipeline.joblib"
-    assert artifact_path.exists(), "Model artifact missing for deployment"
+    artifact_path = PROJECT_ROOT / "models" / "best_model_pipeline.joblib"
+    assert artifact_path.exists(), "Model artifact missing in models/"
 
     model = joblib.load(artifact_path)
     assert hasattr(model, "predict"), "Loaded object is not a scikit-learn estimator"
