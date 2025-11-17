@@ -6,11 +6,11 @@ import pandas as pd
 import streamlit as st
 from huggingface_hub import hf_hub_download
 
-# ==== Konfigurasi model ====
-# Path lokal (dipakai CI test & kalau kamu commit artefaknya)
+# ==== Model configuration ====
+# Local path (used for CI tests & when you commit the artifact)
 LOCAL_MODEL_PATH = Path(__file__).resolve().parent / "best_model_pipeline.joblib"
 
-# Repo model di Hugging Face Hub (fallback saat lokal tidak ada)
+# Model repo on Hugging Face Hub (fallback when local file is not available)
 MODEL_REPO_ID = "vorddd/shipping-delay-knn-v1"
 MODEL_FILENAME = "best_model_pipeline.joblib"
 
@@ -27,11 +27,11 @@ FEATURE_ORDER = [
 @st.cache_resource(show_spinner=False)
 def load_model():
     """
-    Load model pipeline.
+    Load the trained model pipeline.
 
-    Prioritas:
-    1. Kalau LOCAL_MODEL_PATH ada -> pakai itu (dipakai di unit test & dev lokal).
-    2. Kalau tidak ada -> download dari Hugging Face Hub (dipakai di Space).
+    Priority:
+    1. If LOCAL_MODEL_PATH exists -> use that (for unit tests & local dev).
+    2. Otherwise -> download from Hugging Face Hub (for Spaces).
     """
     if LOCAL_MODEL_PATH.exists():
         model_path = LOCAL_MODEL_PATH
@@ -46,10 +46,10 @@ def load_model():
     return model
 
 
-
 def _get_feature_ranges(data: pd.DataFrame) -> dict:
+    """Get min, max, median for numeric features to build friendly sliders."""
     ranges = {}
-    for column in FEATURE_ORDER[:-1]:  # numerical only
+    for column in FEATURE_ORDER[:-1]:  # numeric only, last one is categorical
         series = data[column]
         ranges[column] = (
             int(series.min()),
@@ -60,67 +60,80 @@ def _get_feature_ranges(data: pd.DataFrame) -> dict:
 
 
 def model_page(reference_data: Optional[pd.DataFrame] = None) -> None:
-    st.header("Model Prediction")
+    st.header("Shipment Delay Prediction")
+
     st.write(
-        "Isi form di bawah untuk melihat probabilitas paket sampai tepat waktu. "
-        "Antarmuka sudah disederhanakan agar nyaman digunakan pada Hugging Face Spaces."
+        "Use this tool to estimate **whether a shipment is likely to arrive on time or late** "
+        "based on key business inputs such as product cost, discount, and customer history."
+    )
+    st.caption(
+        "Fill in the form below with realistic values. "
+        "The model will return a prediction and the estimated probabilities."
     )
 
     if reference_data is None:
-        raise ValueError("reference_data is required")
+        raise ValueError("reference_data is required to build sensible input ranges")
 
+    # Build slider ranges from real data so the UI feels realistic
     feature_ranges = _get_feature_ranges(reference_data)
     product_options = sorted(reference_data["Product_importance"].unique())
 
     with st.form("prediction_form"):
-        st.subheader("Masukkan Detail Pengiriman")
+        st.subheader("Shipment details")
+
         col1, col2 = st.columns(2)
 
         customer_care_calls = col1.slider(
-            "Jumlah Panggilan Customer Care",
+            "Customer care calls",
             min_value=feature_ranges["Customer_care_calls"][0],
             max_value=feature_ranges["Customer_care_calls"][1],
             value=feature_ranges["Customer_care_calls"][2],
+            help="How many times this customer contacted customer service about this order.",
         )
         cost_of_product = col2.slider(
-            "Biaya Produk",
+            "Cost of the product",
             min_value=feature_ranges["Cost_of_the_Product"][0],
             max_value=feature_ranges["Cost_of_the_Product"][1],
             value=feature_ranges["Cost_of_the_Product"][2],
+            help="Total product cost. Higher-value items may be treated differently in operations.",
         )
 
         prior_purchases = col1.slider(
-            "Jumlah Pembelian Sebelumnya",
+            "Prior purchases",
             min_value=feature_ranges["Prior_purchases"][0],
             max_value=feature_ranges["Prior_purchases"][1],
             value=feature_ranges["Prior_purchases"][2],
+            help="How many times this customer has purchased before.",
         )
         discount_offered = col2.slider(
-            "Diskon yang Ditawarkan",
+            "Discount offered (%)",
             min_value=feature_ranges["Discount_offered"][0],
             max_value=feature_ranges["Discount_offered"][1],
             value=feature_ranges["Discount_offered"][2],
+            help="Discount given for this order, in percent.",
         )
 
         weight_in_gms = st.slider(
-            "Berat Produk (gram)",
+            "Product weight (grams)",
             min_value=feature_ranges["Weight_in_gms"][0],
             max_value=feature_ranges["Weight_in_gms"][1],
             value=feature_ranges["Weight_in_gms"][2],
+            help="Heavier products may take more time to handle and ship.",
         )
 
         product_importance = st.selectbox(
-            "Pentingnya Produk",
+            "Product importance",
             options=product_options,
+            help="Business importance of the product (for example: low, medium, high).",
         )
 
-        submitted = st.form_submit_button("Prediksi Pengiriman")
+        submitted = st.form_submit_button("Predict shipment status")
 
     if not submitted:
-        st.info("Masukkan parameter dan klik tombol prediksi.")
+        st.info("Fill in the shipment details and click **Predict shipment status**.")
         return
 
-    # SUSUN SESUAI URUTAN FITUR SAAT TRAINING
+    # Build feature vector in the same order used during training
     features = pd.DataFrame(
         [[
             customer_care_calls,
@@ -135,13 +148,43 @@ def model_page(reference_data: Optional[pd.DataFrame] = None) -> None:
 
     model = load_model()
     prediction_raw = model.predict(features)[0]
-    prediction_label = "Tepat Waktu" if prediction_raw == 1 else "Tidak Tepat Waktu"
+    is_on_time = prediction_raw == 1
 
-    st.subheader("Hasil Prediksi")
-    if prediction_label == "Tepat Waktu":
-        st.success("Pengiriman diprediksi **tepat waktu**.")
+    # Try to get probability if the model supports it
+    on_time_prob = None
+    late_prob = None
+    if hasattr(model, "predict_proba"):
+        proba = model.predict_proba(features)[0]
+        # assuming class 0 = Late, class 1 = On Time
+        late_prob = float(proba[0])
+        on_time_prob = float(proba[1])
+
+    st.subheader("Prediction result")
+
+    if is_on_time:
+        st.success("This shipment is **predicted to arrive ON TIME**.")
     else:
-        st.error("Pengiriman diprediksi **terlambat**.")
+        st.error("This shipment is **predicted to be LATE**.")
 
-    st.write("Detail input yang digunakan:")
+    if on_time_prob is not None and late_prob is not None:
+        c1, c2 = st.columns(2)
+        c1.metric("On-time probability", f"{on_time_prob * 100:.1f}%")
+        c2.metric("Late probability", f"{late_prob * 100:.1f}%")
+
+        st.caption(
+            "Probabilities are model estimates based on historical data. "
+            "They are not guarantees, but they can help you prioritize risky shipments."
+        )
+    else:
+        st.caption(
+            "This model does not expose class probabilities. "
+            "Only the predicted class (On Time / Late) is shown."
+        )
+
+    st.markdown("---")
+    st.markdown("### Input summary")
+    st.write(
+        "These are the values you entered. You can tweak them and run the prediction again "
+        "to see how the risk changes for different shipment profiles."
+    )
     st.dataframe(features, use_container_width=True)
