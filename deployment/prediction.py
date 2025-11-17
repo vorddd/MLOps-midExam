@@ -4,8 +4,11 @@ from typing import Optional
 import joblib
 import pandas as pd
 import streamlit as st
+from huggingface_hub import hf_hub_download
 
-MODEL_PATH = Path(__file__).resolve().parent / "best_model_pipeline.joblib"
+# repo model di HF (bukan Spaces)
+MODEL_REPO_ID = "vorddd/shipping-delay-knn-v1"
+MODEL_FILENAME = "best_model_pipeline.joblib"
 
 FEATURE_ORDER = [
     "Customer_care_calls",
@@ -16,15 +19,22 @@ FEATURE_ORDER = [
     "Product_importance",
 ]
 
+
 @st.cache_resource(show_spinner=False)
 def load_model():
-    """Load model pipeline yang berisi preprocessing + model."""
-    return joblib.load(MODEL_PATH)
+    """Download + load model pipeline (sudah termasuk preprocessing)."""
+    model_path = hf_hub_download(
+        repo_id=MODEL_REPO_ID,
+        filename=MODEL_FILENAME,
+        repo_type="model",  # karena ini model repo biasa, bukan Spaces
+    )
+    model = joblib.load(model_path)
+    return model
 
 
 def _get_feature_ranges(data: pd.DataFrame) -> dict:
     ranges = {}
-    for column in FEATURE_ORDER[:-1]:  # exclude categorical
+    for column in FEATURE_ORDER[:-1]:  # numerical only
         series = data[column]
         ranges[column] = (
             int(series.min()),
@@ -36,6 +46,10 @@ def _get_feature_ranges(data: pd.DataFrame) -> dict:
 
 def model_page(reference_data: Optional[pd.DataFrame] = None) -> None:
     st.header("Model Prediction")
+    st.write(
+        "Isi form di bawah untuk melihat probabilitas paket sampai tepat waktu. "
+        "Antarmuka sudah disederhanakan agar nyaman digunakan pada Hugging Face Spaces."
+    )
 
     if reference_data is None:
         raise ValueError("reference_data is required")
@@ -44,6 +58,7 @@ def model_page(reference_data: Optional[pd.DataFrame] = None) -> None:
     product_options = sorted(reference_data["Product_importance"].unique())
 
     with st.form("prediction_form"):
+        st.subheader("Masukkan Detail Pengiriman")
         col1, col2 = st.columns(2)
 
         customer_care_calls = col1.slider(
@@ -90,19 +105,21 @@ def model_page(reference_data: Optional[pd.DataFrame] = None) -> None:
         st.info("Masukkan parameter dan klik tombol prediksi.")
         return
 
-    # THIS IS KEY: build DataFrame with EXACT SAME COLUMN ORDER
-    features = pd.DataFrame([[ 
-        customer_care_calls,
-        cost_of_product,
-        prior_purchases,
-        discount_offered,
-        weight_in_gms,
-        product_importance,
-    ]], columns=FEATURE_ORDER)
+    # SUSUN SESUAI URUTAN FITUR SAAT TRAINING
+    features = pd.DataFrame(
+        [[
+            customer_care_calls,
+            cost_of_product,
+            prior_purchases,
+            discount_offered,
+            weight_in_gms,
+            product_importance,
+        ]],
+        columns=FEATURE_ORDER,
+    )
 
     model = load_model()
     prediction_raw = model.predict(features)[0]
-
     prediction_label = "Tepat Waktu" if prediction_raw == 1 else "Tidak Tepat Waktu"
 
     st.subheader("Hasil Prediksi")
@@ -111,4 +128,5 @@ def model_page(reference_data: Optional[pd.DataFrame] = None) -> None:
     else:
         st.error("Pengiriman diprediksi **terlambat**.")
 
+    st.write("Detail input yang digunakan:")
     st.dataframe(features, use_container_width=True)

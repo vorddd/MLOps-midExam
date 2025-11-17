@@ -1,7 +1,7 @@
-streamlit
-pandas
-numpy
-plotly
-scikit-learn==1.5.1
-joblib
 huggingface_hub
+joblib
+pandas
+streamlit
+plotly
+numpy
+scikit-learn==1.5.1
