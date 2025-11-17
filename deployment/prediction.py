@@ -1,28 +1,19 @@
 from pathlib import Path
-from typing import Optional
-
 import joblib
-import pandas as pd
 import streamlit as st
-from huggingface_hub import hf_hub_download
+import pandas as pd
 
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
-LOCAL_MODEL_PATH = PROJECT_ROOT / "models" / "best_model_pipeline.joblib"
-DATA_PATH = Path(__file__).resolve().parent / "shipping.csv"
-HF_REPO_ID = "vorddd/shipping-delay-knn"
-HF_MODEL_FILENAME = "best_model_pipeline.joblib"
+# Path lokal ke model di folder deployment
+MODEL_PATH = Path(__file__).resolve().parent / "best_model_pipeline.joblib"
+PREPROCESS_PATH = Path(__file__).resolve().parent / "preprocessing_pipeline.joblib"
 
 
 @st.cache_resource(show_spinner=False)
 def load_model():
-    if LOCAL_MODEL_PATH.exists():
-        return joblib.load(LOCAL_MODEL_PATH)
-
-    model_path = hf_hub_download(
-        repo_id=HF_REPO_ID,
-        filename=HF_MODEL_FILENAME,
-    )
-    return joblib.load(model_path)
+    """Load model dan preprocessing pipeline dari file lokal di deployment/"""
+    model = joblib.load(MODEL_PATH)
+    preprocess = joblib.load(PREPROCESS_PATH)
+    return model, preprocess
 
 
 def _get_feature_ranges(data: pd.DataFrame) -> dict:
@@ -118,8 +109,12 @@ def model_page(reference_data: Optional[pd.DataFrame] = None) -> None:
         }
     )
 
-    model = load_model()
-    prediction_raw = model.predict(features)[0]
+    model, preprocess = load_model()
+
+    X = preprocess.transform(features)
+    prediction_raw = model.predict(X)[0]
+
+
     prediction_label = "Tepat Waktu" if prediction_raw == 1 else "Tidak Tepat Waktu"
 
     probability = None
