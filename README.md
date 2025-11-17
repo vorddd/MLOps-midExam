@@ -1,41 +1,207 @@
-﻿---
-title: MLOps Mid Exam - Shipping Delay Prediction
-emoji: 📦
-colorFrom: blue
-colorTo: purple
-sdk: streamlit
-app_file: deployment/app.py
-pinned: false
+﻿# 📦 MLOPS-MIDEXAM — Shipping Delay Prediction  
+**Machine Learning • Deployment • CI/CD • Testing • Docker**
+
+Repository ini berisi project Machine Learning untuk memprediksi apakah sebuah pengiriman **tiba tepat waktu** atau **terlambat** berdasarkan data operasional logistik.  
+Proyek ini mencakup:
+
+- Training model ML (scikit-learn)  
+- Deployment aplikasi (FastAPI/Streamlit — sesuaikan)  
+- CI/CD menggunakan GitHub Actions  
+- Unit testing + data integrity testing  
+- Containerization (Dockerfile)  
+- Deployment ke HuggingFace Spaces  
+
 ---
 
-# MLOps Mid Exam – Shipping Delay Prediction
+## 📁 Project Structure
 
-A lightweight MLOps project that predicts whether a shipment will arrive on time. The model is a scikit-learn pipeline (KNN + preprocessing) and the Streamlit app is deployed to Hugging Face Spaces while CI keeps the training artifacts healthy.
-
-- **Demo**: https://huggingface.co/spaces/vorddd/MLOps-MidExam  
-- **Model repo**: `vorddd/shipping-delay-knn`
-
-## How It Works
-
-- The training notebook exports `models/best_model_pipeline.joblib`.
-- `deployment/prediction.py` loads that file from `models/` during development and from the Hugging Face Hub in production (via `hf_hub_download`).
-- `deployment/app.py` stitches a simple overview page, an EDA tab (`deployment/eda.py`), and the prediction form.
-- Runtime dependencies live in `deployment/requirements.txt`; dev/test tooling stays in `requirements-dev.txt`.
-
-## Run Locally
-
-```bash
-python -m venv .venv
-.venv\Scripts\activate          # or source .venv/bin/activate
-pip install -r deployment/requirements.txt -r requirements-dev.txt
-streamlit run deployment/app.py
+```
+MLOPS-MIDEXAM/
+│
+├── .github/
+│   └── workflows/
+│       ├── ci.yml                 # GitHub Actions (CI/CD Pipeline)
+│       └── cd.yml              # GitHub Actions (CI/CD Pipeline)
+│
+├── deployment/
+│   ├── __init__.py               
+│   ├── app.py                     # Main application (API/UI)
+│   ├── eda.py                     # EDA script (optional)
+│   ├── prediction.py              # Prediction logic (load model + inference)
+│   ├── README.md
+│   ├── requirements.txt           # Dependencies for deployment
+│   └── shipping.csv               # Deployment resource (optional)
+│
+├── models/
+│   ├── best_model_pipeline.joblib
+│   └── tpreprocessing_pipeline.joblib     # Test for inference pipeline & dataset validation
+│
+├── tests/
+│   ├── __pycache__/
+│   └── test_data_integrity.py     # Test for inference pipeline & dataset validation
+│
+├── .gitattributes
+├── Dockerfile                      # Container image for deployment
+├── iqbal_saputra_inf.ipynb        # Inference notebook (optional)
+├── iqbal_saputra.ipynb            # Main training notebook
+├── README.md                      # Project documentation
+├── release.json
+├── requirements-dev.txt           # Dev dependencies (pytest, linters, etc.)
+├── shipping.csv                    # Main dataset used for training/testing
+└── url.txt                        # Deployment URL (HuggingFace)
 ```
 
-Place the exported pipelines inside `models/` (already ignored in CD) and Streamlit will use them automatically. `pytest` runs the quick smoke tests.
+---
 
-## CI/CD
+## 🚀 Overview
 
-- **CI** (`.github/workflows/ci.yml`): runs on pushes/PRs to `main`, installs runtime + dev requirements, then executes `pytest`.
-- **CD** (`.github/workflows/cd.yml`): mirrors the minimal app bundle (README + `deployment/` folder + requirements) into a temp directory and force-pushes it to the Hugging Face Space `vorddd/MLOps-MidExam` with `HF_TOKEN`. If the token is missing, the deploy step exits gracefully.
+### 🎯 Objective  
+Membangun sistem prediksi apakah paket *Reached on Time* (1) atau *Delayed* (0) berdasarkan data logistik.
 
-This setup keeps the repository easy to iterate on locally while ensuring the public app always downloads the latest pipeline from the Hub.
+### 🔍 Dataset  
+- File: `shipping.csv`  
+- Target: `Reached.on.Time_Y.N`  
+
+Feature examples:
+- Warehouse Block  
+- Mode of Transport  
+- Distance & Duration  
+- Customer Rating  
+- Cost of Delivery  
+- Product Importance  
+- dll.
+
+---
+
+## 🧠 Model
+
+- Preprocessing menggunakan `ColumnTransformer`
+- Scaling numerik + encoding kategorikal
+- Model terbaik hasil tuning: **KNN**
+- Pipeline disimpan sebagai:
+  - `best_model_pipeline.joblib`
+  - `preprocessing_pipeline.joblib`
+
+Metrics (sesuaikan dengan hasil akhir):
+
+- Accuracy: ...
+- Precision: ...
+- Recall: ...
+- F1-score: ...
+
+---
+
+## 🧪 Unit Testing
+
+Folder: `tests/test_data_integrity.py`
+
+Test mencakup:
+
+- Cek dataset tersedia & kolom wajib ada  
+- Cek model bisa diload (`joblib`)  
+- Inference `predict()` berjalan tanpa error  
+- Jumlah output sesuai input  
+
+Jalankan test:
+
+```bash
+pytest
+```
+
+---
+
+## ⚙️ CI/CD Pipeline
+
+### CI — Continuous Integration (GitHub Actions)
+
+Workflow: `.github/workflows/ci-cd.yml`
+
+Pipeline otomatis:
+
+1. Install dependencies  
+2. Install dev dependencies (`requirements-dev.txt`)  
+3. Run unit tests (`pytest`)  
+4. (Opsional) Linting / formatting  
+
+Pipeline berjalan otomatis setiap push atau PR.
+
+---
+
+### CD — Continuous Deployment (HuggingFace Spaces)
+
+- Repo ini terkoneksi ke **HuggingFace Space**
+- Jika CI *lulus*:
+  - Commit terbaru otomatis ditarik  
+  - Dibuild ulang  
+  - Dideploy ulang  
+
+Tidak perlu upload manual.
+
+---
+
+## 🌐 Deployment
+
+URL aplikasi tercantum pada:
+
+```
+[url.txt](https://huggingface.co/spaces/vorddd/MLOps-MidExam)
+```
+
+---
+
+## 🖥️ Menjalankan Aplikasi Secara Lokal
+
+Masuk folder:
+
+```bash
+cd deployment
+pip install -r requirements.txt
+```
+
+Jika menggunakan **Streamlit**:
+
+```bash
+streamlit run app.py
+```
+
+Jika menggunakan **FastAPI**:
+
+```bash
+uvicorn app:app --reload
+```
+
+---
+
+## 🐳 Docker Support
+
+Build image:
+
+```bash
+docker build -t shipping-app .
+```
+
+Run container:
+
+```bash
+docker run -p 8080:8080 shipping-app
+```
+
+---
+
+## 🔁 Re-Training Model
+
+Training dilakukan melalui notebook:
+
+```
+iqbal_saputra.ipynb
+```
+
+Isi notebook:
+
+- EDA  
+- Preprocessing  
+- Training model  
+- Evaluasi  
+- Export model pipeline `.joblib`  
+
+---
