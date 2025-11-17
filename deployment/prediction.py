@@ -1,7 +1,10 @@
 from pathlib import Path
+from typing import Optional
+
 import joblib
-import streamlit as st
 import pandas as pd
+import streamlit as st
+
 
 # Path lokal ke model di folder deployment
 MODEL_PATH = Path(__file__).resolve().parent / "best_model_pipeline.joblib"
