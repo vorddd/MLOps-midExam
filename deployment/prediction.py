@@ -68,7 +68,7 @@ def model_page(reference_data: Optional[pd.DataFrame] = None) -> None:
     )
     st.caption(
         "Fill in the form below with realistic values. "
-        "The model will return a prediction and the estimated probabilities."
+        "The model will return a simple prediction: **On Time** or **Late**."
     )
 
     if reference_data is None:
@@ -150,15 +150,6 @@ def model_page(reference_data: Optional[pd.DataFrame] = None) -> None:
     prediction_raw = model.predict(features)[0]
     is_on_time = prediction_raw == 1
 
-    # Try to get probability if the model supports it
-    on_time_prob = None
-    late_prob = None
-    if hasattr(model, "predict_proba"):
-        proba = model.predict_proba(features)[0]
-        # assuming class 0 = Late, class 1 = On Time
-        late_prob = float(proba[0])
-        on_time_prob = float(proba[1])
-
     st.subheader("Prediction result")
 
     if is_on_time:
@@ -166,25 +157,15 @@ def model_page(reference_data: Optional[pd.DataFrame] = None) -> None:
     else:
         st.error("This shipment is **predicted to be LATE**.")
 
-    if on_time_prob is not None and late_prob is not None:
-        c1, c2 = st.columns(2)
-        c1.metric("On-time probability", f"{on_time_prob * 100:.1f}%")
-        c2.metric("Late probability", f"{late_prob * 100:.1f}%")
-
-        st.caption(
-            "Probabilities are model estimates based on historical data. "
-            "They are not guarantees, but they can help you prioritize risky shipments."
-        )
-    else:
-        st.caption(
-            "This model does not expose class probabilities. "
-            "Only the predicted class (On Time / Late) is shown."
-        )
+    st.caption(
+        "The prediction is based on historical patterns in the training data. "
+        "Use it as a rough risk indicator, not as a guarantee."
+    )
 
     st.markdown("---")
     st.markdown("### Input summary")
     st.write(
-        "These are the values you entered. You can tweak them and run the prediction again "
-        "to see how the risk changes for different shipment profiles."
+        "These are the values you entered. "
+        "to see how the model reacts to different shipment profiles."
     )
     st.dataframe(features, use_container_width=True)
