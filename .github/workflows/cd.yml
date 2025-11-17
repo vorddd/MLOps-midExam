@@ -6,7 +6,7 @@ on:
       - main
 
 permissions:
-  contents: write
+  contents: read
   packages: write
 
 jobs:
@@ -32,7 +32,6 @@ jobs:
           path: streamlit-shipping.tar
 
   deploy-to-hf:
-    if: ${{ secrets.HF_TOKEN != '' }}
     needs: build-and-package
     runs-on: ubuntu-latest
     steps:
