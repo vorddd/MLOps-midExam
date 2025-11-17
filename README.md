@@ -10,7 +10,9 @@ Live app: **https://huggingface.co/spaces/vorddd/MLOps-MidExam**
 
 ```
 MLOps-midExam/
-├─ .github/workflows/ci-cd.yml      # GitHub Actions pipeline
+├─ .github/workflows/
+│  ├─ ci.yml                        # Test suite (CI)
+│  └─ cd.yml                        # Build + deploy (CD)
 ├─ deployment/
 │  ├─ app.py                        # Streamlit entry point
 │  ├─ eda.py                        # Interactive visual analytics
@@ -21,8 +23,9 @@ MLOps-midExam/
 │  └─ shipping.csv                  # Data copy for deployment
 ├─ tests/test_data_integrity.py     # Dataset & artifact smoke tests
 ├─ Dockerfile                       # Container definition for the app
-├─ best_model_pipeline.joblib       # Training output (root copy)
-├─ preprocessing_pipeline.joblib    # Training preprocessing (root copy)
+├─ models/
+│  ├─ best_model_pipeline.joblib    # Training output archive
+│  └─ preprocessing_pipeline.joblib # Training preprocessing archive
 ├─ shipping.csv                     # Main dataset
 ├─ requirements-dev.txt             # Dev/test dependencies
 ├─ iqbal_saputra.ipynb              # Exploration + training notebook
@@ -80,13 +83,15 @@ pytest
 
 ## CI/CD Pipeline
 
-- **CI (GitHub Actions)** – `.github/workflows/ci-cd.yml`
+- **CI (GitHub Actions)** – `.github/workflows/ci.yml`
   1. Set up Python 3.11 with pip caching.
   2. Install deployment + dev dependencies.
   3. Run the pytest suite.
 
-- **CD (Hugging Face Spaces)**  
-  The repository is connected to the Space `vorddd/MLOps-MidExam`. Any push to `main` triggers a rebuild and redeploy so the public UI always reflects the latest code.
+- **CD (Hugging Face Spaces)** – `.github/workflows/cd.yml`
+  1. Build and package the Streamlit Docker image.
+  2. Prepare a lightweight copy of the repo using `rsync` (excluding `models/`, notebooks, tests, etc.).
+  3. Force-push the deployment bundle to the Hugging Face Space `vorddd/MLOps-MidExam`.
 
 ---
 
@@ -124,7 +129,7 @@ docker run --rm -p 8501:8501 shipping-app
 
 ## Retraining
 
-Re-run `iqbal_saputra.ipynb` to explore data, retrain models, and export updated `.joblib` artifacts. Copy the refreshed files into `deployment/` before pushing to keep the Space in sync.
+Re-run `iqbal_saputra.ipynb` to explore data, retrain models, and export updated `.joblib` artifacts. Copy the refreshed files into both `models/` (for archival) and `deployment/` (for the app) before pushing to keep the Space in sync.
 
 ---
 

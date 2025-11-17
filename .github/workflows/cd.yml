@@ -42,13 +42,25 @@ jobs:
         run: |
           rm -rf hf_space
           mkdir -p hf_space
-          cp -R deployment/. hf_space/
-          cp README.md hf_space/README.md
+          rsync -av \
+            --exclude=".git/" \
+            --exclude=".github/" \
+            --exclude="models/" \
+            --exclude="tests/" \
+            --exclude="*.ipynb" \
+            --exclude="Dockerfile" \
+            --exclude="requirements-dev.txt" \
+            --exclude="shipping.csv" \
+            ./ hf_space/
 
       - name: Push to Hugging Face Space
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
+          if [ -z "${HF_TOKEN}" ]; then
+            echo "HF_TOKEN is not set. Skipping deploy step."
+            exit 0
+          fi
           cd hf_space
           git init
           git config user.email "actions@github.com"
